@@ -21,7 +21,7 @@ router.put('/:id/preferences', updatePreferences);
 router.put('/:id/password', changePassSchema, changePass);
 
 router.post('/login', loginSchema, login);
-router.post('/:id/logout', logout);
+router.post('/logout', logout, logoutSchema);
 router.get('/:id/activity', getActivities);
 
 router.put('/:id/deactivate', deactivateUser);
@@ -72,6 +72,7 @@ function createSchema(req, res, next) {
         lastName: Joi.string().required(),
         role: Joi.string().valid(Role.Admin, Role.User).required(),
         email: Joi.string().email().required(),
+        userName: Joi.string().required(),
         password: Joi.string().min(6).required(),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
         profilePic: Joi.string().required()
@@ -83,6 +84,7 @@ function updateSchema(req, res, next) {
     const schema = Joi.object({
         title: Joi.string().empty(''),
         firstName: Joi.string().empty(''),
+        userName: Joi.string().empty(''),
         lastName: Joi.string().empty(''),
         email: Joi.string().email().empty(''),
         password: Joi.string().min(6).empty(''),
@@ -144,22 +146,28 @@ function login(req, res, next) {
 }
 function loginSchema(req, res, next) {
     const schema = Joi.object({
-        email: Joi.string().email().required(),
+        userName: Joi.string().empty(),
+        email: Joi.string().email().empty(),
         password: Joi.string().required()
     });
     validateRequest(req, next, schema);
 }
 //====================Logout Function=========================
 function logout(req, res, next) {
-    const id = req.params.id; // Extract user ID from the route params
-    const ipAddress = req.ip || 'Unknown IP'; // Extract IP address from the request object
-    const browserInfo = req.headers['user-agent'] || 'Unknown Browser'; // Extract browser info from headers
+    const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const browserInfo = req.headers['user-agent'] || 'Unknown Browser';
 
-    // Call the user service with the extracted information
-    userService.logout(id, { ipAddress, browserInfo })
-        .then(response => res.json(response))
-        .catch(next);
+    userService.logout({ ...req.body, ipAddress, browserInfo })
+    .then(response => res.json(response))
+    .catch(next);
 }
+function logoutSchema(req, res, next) {
+    const schema = Joi.object({
+        id: Joi.int().id().required()
+    });
+    validateRequest(req, next, schema);
+}
+
 //====================Deactivate & Reactivate Function=========================
 function deactivateUser(req, res, next) {
     userService.deactivate(req.params.id)
