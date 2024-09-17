@@ -39,7 +39,10 @@ async function create(params) {
     if (await db.User.findOne({ where: { email: params.email } })) {
         throw 'Email "' + params.email + '" is already registered';
     }
-    
+
+    if (await db.User.findOne({ where: { userName: params.userName } })) {
+        throw 'userName "' + params.userName + '" is already registered';
+    }
     const user = new db.User(params);
     user.passwordHash = await bcrypt.hash(params.password, 10);
     await user.save();
@@ -231,7 +234,22 @@ async function changePass(id, params) {
 }
 //===================Login wht Token function==============================
 async function login(params) {
-    const user = await db.User.scope('withHash').findOne({ where: { email: params.email } });
+    const { userName, email } = params;
+
+// Construct the query based on the provided parameters
+const query = { where: {[Sequelize.Op.or]: [] }};
+
+if (userName) {
+  query.where[Sequelize.Op.or].push({ userName });
+}
+
+if (email) {
+  query.where[Sequelize.Op.or].push({ email });
+}
+
+// Perform the query using the constructed query object
+const user = await db.User.scope('withHash').findOne(query);
+
     if (!user) throw 'User does not exist';
     
     // Check if the user's account is active
@@ -255,8 +273,8 @@ async function login(params) {
     return { token };
 }
 //===================Logout function==============================
-async function logout(id, params) {
-    const user = await db.User.findByPk(id);
+async function logout(params) {
+    const user = await db.User.scope('withHash').findOne({ where: { id: params.id } });
     if (!user) throw new Error('User not found');
 
     try {
