@@ -4,14 +4,15 @@ const Joi = require('joi');
 const validateRequest = require('_middleware/validate-request');
 const Role = require('_helpers/role');
 const userService = require('./user.service');
+const authenticateToken = require('_middleware/auth.middleware');
 
-router.get('/', getAll); 
-router.get('/search', search);
-router.get('/searchAll', searchAll);  
-router.get('/:id', getById);
-router.post('/', createSchema, create);
-router.put('/:id', updateSchema, update);
-router.delete('/:id', _delete);
+router.get('/',authenticateToken, getAll); 
+router.get('/search',authenticateToken, search);
+router.get('/searchAll',authenticateToken, searchAll);  
+router.get('/:id',authenticateToken, getById);
+router.post('/',createSchema, create);
+router.put('/:id', authenticateToken,updateSchema, update);
+router.delete('/:id', authenticateToken,_delete);
 
 router.put('/:id/role', updateRoleSchema, updateRole);
 
@@ -21,8 +22,8 @@ router.put('/:id/preferences', updatePreferences);
 router.put('/:id/password', changePassSchema, changePass);
 
 router.post('/login', loginSchema, login);
-router.post('/logout', logout, logoutSchema);
-router.get('/:id/activity', getActivities);
+router.post('/logout',authenticateToken, logout, logoutSchema);
+router.get('/:id/activity',authenticateToken, getActivities);
 
 router.put('/:id/deactivate', deactivateUser);
 router.put('/:id/reactivate', reactivateUser);
@@ -149,7 +150,7 @@ function loginSchema(req, res, next) {
         userName: Joi.string().empty(),
         email: Joi.string().email().empty(),
         password: Joi.string().required()
-    }).xor('userName', 'email') // Ensure only one of them is provided
+    }).xor('userName', 'email') 
         .messages({
         'object.missing': 'Either email or userName must be provided.',
         'object.xor': 'Both email and userName cannot be provided at the same time.'

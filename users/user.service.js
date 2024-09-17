@@ -259,8 +259,11 @@ async function login(params) {
     const isPasswordValid = await bcrypt.compare(params.password, user.passwordHash);
     if (!isPasswordValid) throw 'Password Incorrect';
 
-    const token = jwt.sign({ id: params.id, email: params.email, firstName: params.firstName }, 
-        process.env.SECRET, {});
+    const token = jwt.sign(
+        { id: user.id, email: user.email, firstName: user.firstName },
+        process.env.SECRET,
+        { expiresIn: '1m' }
+    );
 
         user.lastDateLogin = new Date();  // Set current date and time
         await user.save();
