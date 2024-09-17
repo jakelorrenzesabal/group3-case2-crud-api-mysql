@@ -236,19 +236,20 @@ async function changePass(id, params) {
 async function login(params) {
     const { userName, email } = params;
 
-// Construct the query based on the provided parameters
-const query = { where: {[Sequelize.Op.or]: [] }};
-
-if (userName) {
-  query.where[Sequelize.Op.or].push({ userName });
-}
-
-if (email) {
-  query.where[Sequelize.Op.or].push({ email });
-}
-
-// Perform the query using the constructed query object
-const user = await db.User.scope('withHash').findOne(query);
+    // Ensure either email or userName is provided, but not both
+    if (!(userName || email)) {
+      throw new Error('Either email or userName must be provided.');
+    }
+    const query = { where: {} };
+    
+    if (userName) {
+      query.where.userName = userName;
+    } else if (email) {
+      query.where.email = email;
+    }
+    
+    // Perform the query using the constructed query object
+    const user = await db.User.scope('withHash').findOne(query);
 
     if (!user) throw 'User does not exist';
     

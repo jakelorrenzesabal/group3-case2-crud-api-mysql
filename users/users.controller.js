@@ -149,7 +149,12 @@ function loginSchema(req, res, next) {
         userName: Joi.string().empty(),
         email: Joi.string().email().empty(),
         password: Joi.string().required()
-    });
+    }).xor('userName', 'email') // Ensure only one of them is provided
+        .messages({
+        'object.missing': 'Either email or userName must be provided.',
+        'object.xor': 'Both email and userName cannot be provided at the same time.'
+    })
+
     validateRequest(req, next, schema);
 }
 //====================Logout Function=========================
