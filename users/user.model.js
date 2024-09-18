@@ -24,6 +24,7 @@ function model(sequelize) {
 
           // Date last logged in
         lastDateLogin: { type: DataTypes.DATE, allowNull: true },
+        lastLogoutAt: { type: DataTypes.DATE, allowNull: true },
 
         //======For Permission=================
         permission: { type: DataTypes.ENUM('grant', 'revoke'), allowNull: false, defaultValue: 'revoke'}

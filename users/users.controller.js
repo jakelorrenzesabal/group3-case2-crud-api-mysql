@@ -4,15 +4,17 @@ const Joi = require('joi');
 const validateRequest = require('_middleware/validate-request');
 const Role = require('_helpers/role');
 const userService = require('./user.service');
-const authenticateToken = require('_middleware/auth.middleware');
+const authenticate = require('_middleware/authenticate');
+const authorize = require('_middleware/authorize');
 
-router.get('/',authenticateToken, getAll); 
-router.get('/search',authenticateToken, search);
-router.get('/searchAll',authenticateToken, searchAll);  
-router.get('/:id',authenticateToken, getById);
+
+router.get('/',authenticate,authorize([Role.Admin]), getAll); 
+router.get('/search',authorize([Role.Admin]), search);
+router.get('/searchAll',authorize([Role.Admin]), searchAll);  
+router.get('/:id', authenticate,authorize([Role.Admin, Role.User]),getById);
 router.post('/',createSchema, create);
-router.put('/:id', authenticateToken,updateSchema, update);
-router.delete('/:id', authenticateToken,_delete);
+router.put('/:id',updateSchema, update);
+router.delete('/:id',_delete);
 
 router.put('/:id/role', updateRoleSchema, updateRole);
 
@@ -22,8 +24,8 @@ router.put('/:id/preferences', updatePreferences);
 router.put('/:id/password', changePassSchema, changePass);
 
 router.post('/login', loginSchema, login);
-router.post('/logout',authenticateToken, logout, logoutSchema);
-router.get('/:id/activity',authenticateToken, getActivities);
+router.post('/logout', logout, logoutSchema);
+router.get('/:id/activity', getActivities);
 
 router.put('/:id/deactivate', deactivateUser);
 router.put('/:id/reactivate', reactivateUser);
@@ -40,9 +42,17 @@ function getAll(req, res, next) {
         .catch(next);
 }
 function getById(req, res, next) {
-    userService.getById(req.params.id)
-        .then(user => res.json(user))
-        .catch(next);
+    const loggedInUserId = req.user.id; // Get the logged-in user's ID from the request (assuming JWT stores this in `req.user`)
+    const requestedUserId = parseInt(req.params.id, 10);
+
+    // Allow admin to access any user's profile or the user to access their own profile
+    if (req.user.role === Role.Admin || loggedInUserId === requestedUserId) {
+        userService.getById(req.params.id)
+            .then(user => res.json(user))
+            .catch(next);
+    } else {
+        return res.status(403).json({ message: 'Unauthorized' });
+    }
 }
 function create(req, res, next) {
     userService.create(req.body)
@@ -159,7 +169,7 @@ function loginSchema(req, res, next) {
     validateRequest(req, next, schema);
 }
 //====================Logout Function=========================
-function logout(req, res, next) {
+function logout(req, res, next) {// Assuming the user is authenticated and the `authenticate` middleware has added user info to `req.user`
     const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const browserInfo = req.headers['user-agent'] || 'Unknown Browser';
 

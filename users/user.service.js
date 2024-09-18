@@ -260,10 +260,8 @@ async function login(params) {
     if (!isPasswordValid) throw 'Password Incorrect';
 
     const token = jwt.sign(
-        { id: user.id, email: user.email, firstName: user.firstName },
-        process.env.SECRET,
-        { expiresIn: '1m' }
-    );
+        { id: user.id, email: user.email, firstName: user.firstName},
+        process.env.SECRET,{ expiresIn: '1h'});
 
         user.lastDateLogin = new Date();  // Set current date and time
         await user.save();
@@ -293,8 +291,11 @@ async function logout(params) {
     } catch (error) {
         console.error('Error logging activity:', error);
     }
+    
+    user.lastLogoutAt = new Date();
+    await user.save();
 
-    return { message: 'User logged out successfully' };
+    return { message: 'Logged out successfully' };
 }
 //===================Logging function==============================
 async function logActivity(userId, actionType, ipAddress, browserInfo, updateDetails = '') {
