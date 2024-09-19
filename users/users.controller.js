@@ -13,25 +13,25 @@ router.get('/search',authorize([Role.Admin]), search);
 router.get('/searchAll',authorize([Role.Admin]), searchAll);  
 router.get('/:id', authenticate,authorize([Role.Admin, Role.User]),getById);
 router.post('/',createSchema, create);
-router.put('/:id',updateSchema, update);
-router.delete('/:id',_delete);
+router.put('/:id',authenticate,authorize([Role.Admin, Role.User]),updateSchema, update);
+router.delete('/:id',authenticate,authorize([Role.Admin]),_delete);
 
-router.put('/:id/role', updateRoleSchema, updateRole);
+router.put('/:id/role', authenticate,authorize([Role.Admin]),updateRoleSchema, updateRole);
 
-router.get('/:id/preferences', getPreferences);
-router.put('/:id/preferences', updatePreferences);
+router.get('/:id/preferences', authenticate,authorize([Role.Admin, Role.User]),getPreferences);
+router.put('/:id/preferences', authenticate,authorize([Role.Admin, Role.User]),updatePreferences);
 
-router.put('/:id/password', changePassSchema, changePass);
+router.put('/:id/password', authenticate,authorize([Role.Admin, Role.User]),changePassSchema, changePass);
 
 router.post('/login', loginSchema, login);
-router.post('/logout', authenticate ,logout, logoutSchema);
-router.get('/:id/activity', getActivities);
+router.post('/logout', authenticate, logout, logoutSchema);
+router.get('/:id/activity',authenticate,authorize([Role.Admin, Role.User]), getActivities);
 
-router.put('/:id/deactivate', deactivateUser);
-router.put('/:id/reactivate', reactivateUser);
+router.put('/:id/deactivate',authenticate,authorize([Role.Admin, Role.User]), deactivateUser);
+router.put('/:id/reactivate',authenticate,authorize([Role.Admin, Role.User]), reactivateUser);
 
-router.get('/:id/permission', getPermission);
-router.post('/:id/permission', createPermission);
+router.get('/:id/permission',authenticate,authorize([Role.Admin]), getPermission);
+router.post('/:id/permission',authenticate,authorize([Role.Admin]), createPermission);
 
 
 module.exports = router;
@@ -42,17 +42,9 @@ function getAll(req, res, next) {
         .catch(next);
 }
 function getById(req, res, next) {
-    const loggedInUserId = req.user.id; // Get the logged-in user's ID from the request (assuming JWT stores this in `req.user`)
-    const requestedUserId = parseInt(req.params.id, 10);
-
-    // Allow admin to access any user's profile or the user to access their own profile
-    if (req.user.role === Role.Admin || loggedInUserId === requestedUserId) {
-        userService.getById(req.params.id)
-            .then(user => res.json(user))
-            .catch(next);
-    } else {
-        return res.status(403).json({ message: 'Unauthorized' });
-    }
+    userService.getById(req.params.id)
+        .then(user => res.json(user))
+        .catch(next);
 }
 function create(req, res, next) {
     userService.create(req.body)
@@ -173,13 +165,26 @@ function logout(req, res, next) {// Assuming the user is authenticated and the `
     const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const browserInfo = req.headers['user-agent'] || 'Unknown Browser';
 
-    userService.logout({ ...req.body, ipAddress, browserInfo })
+    userService.logout({
+        id: req.user.id, // Use the authenticated user's ID from the token
+        ipAddress,
+        browserInfo
+    })
     .then(response => res.json(response))
     .catch(next);
+    
+    // Check for specific error types or messages and return appropriate response
+    if (error.message === 'User not found') {
+        return res.status(404).json({ error: 'User not found. Please check the ID and try again.' });
+    }
+    if (error.message === 'ID mismatch') {
+        return res.status(403).json({ error: 'The provided ID does not match the logged-in user. Access denied.' });
+    }
+    return res.status(500).json({ error: 'An error occurred during logout. Please try again later.' });
 }
 function logoutSchema(req, res, next) {
     const schema = Joi.object({
-        id: Joi.int().id().required()
+        id: Joi.int().integer().required()
     });
     validateRequest(req, next, schema);
 }

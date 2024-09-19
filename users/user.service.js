@@ -46,6 +46,16 @@ async function create(params) {
     const user = new db.User(params);
     user.passwordHash = await bcrypt.hash(params.password, 10);
     await user.save();
+
+    const preferencesData = {
+        userId: user.id, // Reference to the newly created user's ID
+        theme: 'light',  // Default theme (you can modify these defaults as needed)
+        notifications: true,  // Default notifications preference
+        language: 'en'   // Default language
+    };
+
+    // Save the preferences for the user
+    await db.Preferences.create(preferencesData);
 }
 async function update(id, params) {
     const user = await getUser(id);
@@ -190,16 +200,21 @@ async function reactivate(id) {
     await user.save();
 }
 //===================Preferences Get & Update Function===========================
-async function getPreferences(id, params) {
-    const preferences = await db.User.findOne({ where: { id: id }, attributes: [ 'id', 'theme', 'notifications', 'language' ] });
-    if (!preferences) throw 'User not found';
+async function getPreferences(id) {
+    const preferences = await db.Preferences.findOne({
+        where: { userId: id },
+        attributes: ['id', 'userId','theme', 'notifications', 'language']
+    });
+    if (!preferences) throw new Error('User not found');
     return preferences;
 }
 async function updatePreferences(id, params) {
-    const preferences = await db.User.findOne({ where: { id } });
-    if (!preferences) throw 'User not found';
+    const preferences = await db.Preferences.findOne({ where: { userId: id } });
+    if (!preferences) throw new Error('User not found');
 
+    // Update only the provided fields
     Object.assign(preferences, params);
+
     await preferences.save();
 }
 //===================Change Password function==============================
