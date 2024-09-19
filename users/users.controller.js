@@ -24,7 +24,7 @@ router.put('/:id/preferences', updatePreferences);
 router.put('/:id/password', changePassSchema, changePass);
 
 router.post('/login', loginSchema, login);
-router.post('/logout', logout, logoutSchema);
+router.post('/logout', authenticate ,logout, logoutSchema);
 router.get('/:id/activity', getActivities);
 
 router.put('/:id/deactivate', deactivateUser);
