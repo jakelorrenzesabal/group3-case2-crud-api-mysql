@@ -17,6 +17,7 @@ async function initialize() {
 
     db.User = require('../users/user.model')(sequelize);
     db.ActivityLog = require('../models/activitylog.model')(sequelize);
+    db.Preferences = require('../models/preferences.model')(sequelize);
 
     await sequelize.sync({ alter: true });
 }
