@@ -18,5 +18,9 @@ async function initialize() {
     db.User = require('../users/user.model')(sequelize);
     db.ActivityLog = require('../models/activitylog.model')(sequelize);
 
+    db.Branch = require('../branches/branch.model')(sequelize);   
+    db.Branch.hasMany(db.User, { foreignKey: 'branchId' });
+    db.User.belongsTo(db.Branch, { foreignKey: 'branchId' });
+
     await sequelize.sync({ alter: true });
 }
