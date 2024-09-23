@@ -8,6 +8,7 @@ router.post('/', createBranch);
 router.put('/:id', updateBranch);
 router.delete('/:id', _deleteBranch);
 router.post('/:id/assign/:userId', assignUser);
+router.post('/:id/remove/:userId', removeUserFromBranch);
 
 module.exports = router;
 
@@ -39,6 +40,11 @@ function _deleteBranch(req, res, next) {
 function assignUser(req, res, next) {
     branchService.assignUser(req.params.id, req.params.userId)
         .then(() => res.json({ message: 'User assigned to branch' }))
+        .catch(next);
+}
+function removeUserFromBranch(req, res, next) {
+    branchService.removeUserFromBranch(req.params.id, req.params.userId)
+        .then(() => res.json({ message: 'User removed from branch' }))
         .catch(next);
 }
 //======================================================================================================

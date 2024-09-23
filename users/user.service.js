@@ -33,7 +33,15 @@ async function getAll() {
     return await db.User.findAll();
 }
 async function getById(id) {
-    return await getUser(id);
+    const user = await db.User.findByPk(id, {
+        include: [{
+            model: db.Branch,
+            as: 'branch',
+            attributes: ['id', 'name', 'location']
+        }]
+    });
+    if (!user) throw 'User not found';
+    return user;
 } 
 async function create(params) {
     if (await db.User.findOne({ where: { email: params.email } })) {

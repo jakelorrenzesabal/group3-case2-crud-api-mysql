@@ -9,6 +9,7 @@ module.exports = {
     deleteBranch: _deleteBranch,
     getBranch,
     assignUser,
+    removeUserFromBranch,
 
     deactivateBranch,
     reactivateBranch
@@ -18,7 +19,13 @@ async function getAllBranch() {
     return await db.Branch.findAll();
 }
 async function getBranchById(id) {
-    const branch = await db.Branch.findByPk(id);
+    const branch = await db.Branch.findByPk(id, {
+        include: [{
+            model: db.User,
+            as: 'user',
+            attributes: ['id', 'firstName', 'lastName', 'email', 'role']
+        }]
+    });
     if (!branch) throw 'Branch not found';
     return branch;
 }
@@ -50,6 +57,15 @@ async function assignUser(branchId, userId) {
     await user.setBranch(branch);
 
     await user.save(); 
+}
+async function removeUserFromBranch(branchId, userId) {
+    const user = await db.User.findOne({ where: { id: userId, branchId: branchId } });
+    if (!user) throw 'User not found or not assigned to this branch';
+
+    user.branchId = null;
+    await user.save();
+
+    return { message: 'User removed from branch' };
 }
 //========================================================================================================
 async function deactivateBranch(id) {
