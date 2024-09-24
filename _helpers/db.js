@@ -19,9 +19,14 @@ async function initialize() {
     db.ActivityLog = require('../models/activitylog.model')(sequelize);
     db.Preferences = require('../models/preferences.model')(sequelize);
 
+    db.Product = require('../products/product.model')(sequelize);
+    db.Inventory = require('../inventories/inventory.model')(sequelize);
+    db.Product.hasOne(db.Inventory, { foreignKey: 'productId', as: 'inventory', onDelete: 'CASCADE' });
+    db.Inventory.belongsTo(db.Product, { foreignKey: 'productId' });
+
     db.Branch = require('../branches/branch.model')(sequelize);   
-    db.Branch.hasMany(db.User, { foreignKey: 'branchId' });
-    db.User.belongsTo(db.Branch, { foreignKey: 'branchId' });
+    db.Branch.hasMany(db.User, { foreignKey: 'branchId', as: 'user' });
+    db.User.belongsTo(db.Branch, { foreignKey: 'branchId', as: 'branch' });
 
     await sequelize.sync({ alter: true });
 }
