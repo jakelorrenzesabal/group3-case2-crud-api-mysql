@@ -19,18 +19,33 @@ async function getAllBranch() {
     return await db.Branch.findAll();
 }
 async function getBranchById(id) {
-    const branch = await db.Branch.findByPk(id, {
-        include: [{
-            model: db.User,
-            as: 'user',
-            attributes: ['id', 'firstName', 'lastName', 'email', 'role']
-        }]
-    });
-    if (!branch) throw 'Branch not found';
-    return branch;
+    try {
+        const branch = await db.Branch.findByPk(id, {
+            include: [{
+                model: db.User,
+                as: 'user',
+                attributes: ['id', 'firstName', 'lastName', 'email', 'role']
+            }]
+        });
+        
+        if (!branch) {
+            throw new Error('Branch not found');
+        }
+
+        return branch;
+    } catch (error) {
+        // Handle or log the error as necessary
+        console.error('Error fetching branch:', error.message);
+        throw error; // Rethrow or handle as needed
+    }
 }
 async function createBranch(params) {
     const branch = new db.Branch(params);
+
+    if (await db.Branch.findOne({ where: { name: params.name } })) {
+        throw 'name "' + params.name + '" is already registered';
+    }
+
     await branch.save();
 }
 async function updateBranch(id, params) {

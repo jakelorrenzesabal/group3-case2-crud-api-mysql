@@ -17,6 +17,7 @@ module.exports = function (roles) {
             if (loggedInUserId !== requestedUserId) {
                 return res.status(403).json({ message: 'Unauthorized to access this data' });
             }
+              
         }
 
         // If authorized, proceed to the next middleware
