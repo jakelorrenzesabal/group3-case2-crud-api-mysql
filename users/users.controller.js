@@ -172,19 +172,10 @@ function logout(req, res, next) {// Assuming the user is authenticated and the `
     })
     .then(response => res.json(response))
     .catch(next);
-    
-    // Check for specific error types or messages and return appropriate response
-    if (error.message === 'User not found') {
-        return res.status(404).json({ error: 'User not found. Please check the ID and try again.' });
-    }
-    if (error.message === 'ID mismatch') {
-        return res.status(403).json({ error: 'The provided ID does not match the logged-in user. Access denied.' });
-    }
-    return res.status(500).json({ error: 'An error occurred during logout. Please try again later.' });
 }
 function logoutSchema(req, res, next) {
     const schema = Joi.object({
-        id: Joi.int().integer().required()
+       
     });
     validateRequest(req, next, schema);
 }
