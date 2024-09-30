@@ -31,7 +31,7 @@ router.put('/:id/deactivate', deactivateUser);
 router.put('/:id/reactivate', reactivateUser);
 
 router.get('/:id/permission', getPermission);
-router.post('/:id/permission', createPermission);
+router.post('/:id/permission', updatePermission);
 
 
 module.exports = router;
@@ -235,8 +235,8 @@ function getPermission(req, res, next) {
         .then(permission => res.json(permission))
         .catch(next);
 }
-function createPermission(req, res, next) {
-    userService.updatePreferences(req.params.id, req.body)
+function updatePermission(req, res, next) {
+    userService.updatePermission(req.params.id, req.body)
         .then(() => res.json({ message: 'Access confirm' }))
         .catch(next);
 }
