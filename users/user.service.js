@@ -25,7 +25,7 @@ module.exports = {
     reactivate,
 
     getPermission,
-    createPermission
+    updatePermission
 };
 
 //===============================Simple CRUD========================================
@@ -393,7 +393,7 @@ async function getPermission(id, params) {
 
     return permission;
 }
-async function createPermission(id, params) {
+async function updatePermission(id, params) {
     const permission = await db.User.findOne({ where: { id } });
     if (!permission) throw 'User not found';
 

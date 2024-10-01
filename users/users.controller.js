@@ -30,8 +30,8 @@ router.get('/:id/activity',authenticate,authorize([Role.Admin, Role.User]), getA
 router.put('/:id/deactivate',authenticate,authorize([Role.Admin, Role.User]), deactivateUser);
 router.put('/:id/reactivate',authenticate,authorize([Role.Admin, Role.User]), reactivateUser);
 
-router.get('/:id/permission',authenticate,authorize([Role.Admin]), getPermission);
-router.post('/:id/permission',authenticate,authorize([Role.Admin]), createPermission);
+router.get('/:id/permission', getPermission);
+router.post('/:id/permission', updatePermission);
 
 
 module.exports = router;
@@ -231,8 +231,8 @@ function getPermission(req, res, next) {
         .then(permission => res.json(permission))
         .catch(next);
 }
-function createPermission(req, res, next) {
-    userService.updatePreferences(req.params.id, req.body)
+function updatePermission(req, res, next) {
+    userService.updatePermission(req.params.id, req.body)
         .then(() => res.json({ message: 'Access confirm' }))
         .catch(next);
 }

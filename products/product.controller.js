@@ -11,22 +11,22 @@ router.delete('/:id', deleteProduct);
 module.exports = router;
 
 function getProduct(req, res, next) {
-    productService.getAll()
+    productService.getProduct()
         .then(products => res.json(products))
         .catch(next);
 }
 function getProductById(req, res, next) {
-    productService.getById(req.params.id)
+    productService.getProductById(req.params.id)
         .then(product => res.json(product))
         .catch(next);
 }
 function createProduct(req, res, next) {
-    productService.create(req.body)
+    productService.createProduct(req.body)
         .then(() => res.json({ message: 'Product created' }))
         .catch(next);
 }
 function updateProduct(req, res, next) {
-    productService.update(req.params.id, req.body)
+    productService.updateProduct(req.params.id, req.body)
         .then(() => res.json({ message: 'Product updated' }))
         .catch(next);
 }
